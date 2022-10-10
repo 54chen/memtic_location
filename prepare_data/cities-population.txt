@@ -1,0 +1,100 @@
+Tokyo 37,274,000
+Delhi 32,066,000
+Shanghai 28,517,000
+Dhaka 22,478,000
+Sao Paulo 22,430,000
+Mexico City 22,085,000
+Cairo 21,750,000
+Beijing 21,333,000
+Mumbai 20,961,000
+Osaka 19,060,000
+New York City 18,867,000
+Chongqing 16,875,000
+Karachi 16,840,000
+Istanbul 15,636,000
+Kinshasa 15,628,000
+Lagos 15,388,000
+Buenos Aires 15,370,000
+Calcutta 15,134,000
+Manila 14,406,000
+Tianjin 14,012,000
+Guangzhou, Guangdong 13,965,000
+Rio de Janeiro 13,634,000
+Lahore 13,542,000
+Bangalore 13,193,000
+Shenzhen 12,831,000
+Moscow 12,641,000
+Los Angeles 12,488,000
+Madras 11,503,000
+Bogota 11,344,000
+Paris 11,142,000
+Jakarta 11,075,000
+Lima 11,045,000
+Bangkok 10,900,000
+Hyderabad 10,534,000
+Seoul 9,976,000
+Nagoya 9,572,000
+Chengdu 9,479,000
+Nanjing, Jiangsu 9,429,000
+Tehran 9,382,000
+Ho Chi Minh City 9,077,000
+Luanda 8,952,000
+Chicago 8,901,000
+Wuhan 8,592,000
+Xian, Shaanxi 8,538,000
+Ahmadabad 8,450,000
+Kuala Lumpur 8,420,000
+Hangzhou 8,045,000
+Surat 7,784,000
+Suzhou, Jiangsu 7,764,000
+Hong Kong 7,643,000
+Riyadh 7,538,000
+Shenyang 7,528,000
+Dongguan 7,512,000
+Baghdad 7,512,000
+Foshan 7,497,000
+Dar es Salaam 7,405,000
+Poona 6,987,000
+Santiago 6,857,000
+Madrid 6,714,000
+Haerbin 6,666,000
+Houston 6,603,000
+Dallas-Fort Worth 6,488,000
+Toronto 6,313,000
+Miami 6,215,000
+Belo Horizonte 6,194,000
+Khartoum 6,160,000
+Johannesburg 6,065,000
+Singapore 6,040,000
+Atlanta 6,013,000
+Dalian 5,930,000
+Qingdao 5,865,000
+Philadelphia 5,756,000
+Zhengzhou 5,690,000
+Jinan, Shandong 5,663,000
+Barcelona 5,658,000
+Saint Petersburg 5,536,000
+Abidjan 5,516,000
+Yangon 5,514,000
+Kitakyushu-Fukuoka 5,503,000
+Alexandria 5,484,000
+Washington DC 5,434,000
+Guadalajara 5,340,000
+Ankara 5,310,000
+Chittagong 5,253,000
+Addis Ababa 5,228,000
+Melbourne 5,151,000
+Nairobi 5,119,000
+Ha Noi 5,067,000
+Sydney 5,057,000
+Monterrey 5,037,000
+Changsha 4,810,000
+Brasilia 4,804,000
+Cape Town 4,801,000
+Jiddah 4,781,000
+Wulumqi 4,710,000
+Kunming 4,657,000
+Phoenix 4,652,000
+Changchun 4,616,000
+Hefei 4,496,000
+Shantou 4,490,000

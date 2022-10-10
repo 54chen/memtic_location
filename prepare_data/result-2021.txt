@@ -1,0 +1,52 @@
+New York          84.591259
+Paris             58.440607
+Philadelphia      53.794112
+Toronto           53.478577
+Luanda            51.450416
+Hyderabad         45.865773
+Kuala Lumpur      44.861287
+Belo Horizonte    34.739038
+Sao Paulo         29.204708
+Shenzhen          25.109121
+Delhi             24.477433
+Alexandria        23.888235
+Guadalajara       21.849512
+Dongguan          21.442527
+Khartoum          21.276064
+Tehran            21.072859
+Monterrey         14.423680
+Los Angeles       13.411997
+Nairobi           12.615758
+Foshan            10.852973
+Shantou           10.479722
+Guangzhou         10.005059
+Madrid             8.271581
+Nanjing            7.845854
+Suzhou             7.534303
+Brasilia           7.133297
+Wuhan              6.319245
+Abidjan            6.216044
+Zhengzhou          5.963934
+Lima               5.805166
+Hefei              5.499143
+Chengdu            5.303391
+Dhaka              4.683055
+Lagos              4.544956
+Qingdao            4.242423
+Jinan              4.067888
+Santiago           3.845484
+Barcelona          3.770195
+Hangzhou           3.629495
+Shenyang           3.270044
+Changsha           3.163671
+Changchun          2.659031
+Ahmadabad          2.544722
+Miami              2.276820
+Surat              2.264431
+Dalian             2.221116
+Houston            1.881746
+Kunming            1.880555
+Chittagong         1.668536
+Kinshasa           0.946933
+Buenos Aires       0.682565
+Calcutta           0.275453
