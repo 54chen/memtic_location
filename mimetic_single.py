@@ -1,10 +1,12 @@
 from operator import ne
+from threading import local
 import pandas as pd
 from numpy import random
 import numpy as np
 import random as rd
+import geemap, ee 
 
-POP_SIZE = 4
+POP_SIZE = 100
 CITY_SIZE = 73
 WAREHOUSE_LEVEL = [0, 1, 2, 3, 4, 5]
 WAREHOUSE_LEVEL_DISTANCE = [0,0.1,0.2,0.3,0.4,0.5] # cover distance is normalised already
@@ -22,6 +24,9 @@ OP = [0,SELECT, RECOMBINE, MUTATE, LS] # Pipeline op
 TOURNAMENT_SELECTION_K = 2
 
 MUTATE_TIMES = 5
+
+PRESERVE_RATE = 0.5
+CONVERGED_RATE = 0.5
 
 # print(FINAL_DATA.iloc[10])
 # print(FINAL_DATA.loc[FINAL_DATA["name"] == 'Beijing Shi'])
@@ -69,13 +74,11 @@ def local_search(solution):
     solutions = generate_neighbourhoods(solution)
     best_solution = solution
     cover_population, cost_total = fitness(solution)
-    print("cost:",cover_population, cost_total)
     best_cost = cost_total
     best_cover = cover_population
     same_count = 0
     for i in range(0, len(solutions)):
         p,c = fitness(solutions[i])
-        print("cost for neighbour", p, c)
         # front decision
         if (c <= best_cost and p >= best_cover):
             best_cost = c
@@ -86,6 +89,8 @@ def local_search(solution):
             same_count = same_count+1
         if same_count >= CONVERGED_CNT:
             break
+        print("best cover and cost for neighbour", best_cover, best_cost)
+
     return best_solution
 
 
@@ -96,14 +101,28 @@ def generate_random_configuration():
 def generate_initial_population():
     pop = []
     for j in range(1, POP_SIZE):
-        print("pop count:",j)
         i = generate_random_configuration()
         i = local_search(i)
         pop.append(i)
     return pop
 
 def is_converged(pop):
-    print('is converged', pop)
+    same = 0
+    total = 0
+    for i in range(len(pop)):
+        j = i+1
+        if j >= len(pop):
+            j = 0
+        
+        comp = np.isclose(pop[i], pop[j])
+        same = same + np.count_nonzero(comp)
+        total = total + len(comp)
+    same_rate = same/total
+    if same_rate >= CONVERGED_RATE:
+        print('Converged checked!', same_rate)
+        return True
+    else:
+        return False
 
 def extract_from_buffer(buffer):
     return buffer
@@ -154,9 +173,6 @@ def apply_operator(op, buffer):
 
 def generate_new_population(pop):
     buffer = {}
-    arity_in = {}
-    arity_in[1] = POP_SIZE
-    arity_out = {}
     buffer[0] = pop
     n_op = 4
     for j in range(1, n_op+1):
@@ -172,21 +188,30 @@ def generate_new_population(pop):
 
     return buffer[n_op]
 
-def update_population(pop, new_pop):
+def update_population(pop, new_pop): # Plus strategy
     next_pop = []
     next_pop.extend(pop)
     next_pop.extend(new_pop) 
     next_pop.sort(key = lambda v: fitness(v))
     return next_pop[:POP_SIZE]
 
-def restart_population(pop):
-    print()
+def restart_population(pop): # Random immigrant
+    new_pop = []
+    preserved = int(len(pop) * PRESERVE_RATE)
+    for i in range(preserved):
+        new_pop.append(pop[i])
+    for j in range(preserved+1, len(pop)):
+        i = generate_random_configuration()
+        i = local_search(i)
+        new_pop.append(i)
+    return new_pop 
 
 
 def mimetic(repetition):
     pop = generate_initial_population()
-    print('inital pop size:', len(pop))
+    print('>>>inital pop size:', len(pop))
     for i in range(repetition):
+        print('================iteration:', i)
         new_pop = generate_new_population(pop)
         print("new_pop size:", len(new_pop))
         pop = update_population(pop, new_pop)
@@ -195,7 +220,32 @@ def mimetic(repetition):
 
     return pop
 
+def generate_visual_csv(solution):
+    # latitude,longitude,radius
+    visualisation = []
+    for i in range(len(solution)):
+        row = []
+        row.append(FINAL_DATA.iloc[i]['latitude'])
+        row.append(FINAL_DATA.iloc[i]['longitude'])
+        row.append(solution[i])
+        visualisation.append(row)
+    df = pd.DataFrame(visualisation, columns=['latitude','l ongitude','radius'])
+    df.to_csv("visualisation.csv")
+
 
 if __name__ == '__main__':
-    repetition = 1
-    mimetic(repetition)
+    repetition = 2
+    pop = mimetic(repetition)
+    best_cost = 99999999
+    best_cover = 0
+    best_solution = []
+    for x in pop:
+        p,c = fitness(x)
+          # front decision
+        if (c <= best_cost and p >= best_cover):
+            best_cost = c
+            best_cover = p
+            best_solution = x
+        print('fitness:', p, c)
+
+    generate_visual_csv(best_solution)
