@@ -34,3 +34,5 @@ non-parallel version Memtic.
 ```
 
 Then run on your  brower.
+
+ ![alt text](https://raw.githubusercontent.com/54chen/memtic_location/main/result1.png)

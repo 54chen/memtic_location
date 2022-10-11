@@ -229,8 +229,8 @@ def generate_visual_csv(solution):
         row.append(FINAL_DATA.iloc[i]['longitude'])
         row.append(solution[i])
         visualisation.append(row)
-    df = pd.DataFrame(visualisation, columns=['latitude','l ongitude','radius'])
-    df.to_csv("visualisation.csv")
+    df = pd.DataFrame(visualisation, columns=['latitude','longitude','radius'])
+    df.to_csv("visualisation1.csv")
 
 
 if __name__ == '__main__':
