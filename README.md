@@ -22,3 +22,15 @@ Merge them to generate:
 - memtic_single.py
 
 non-parallel version Memtic.
+
+
+## Visualisation
+- only support jupyter notebook
+
+- how to start visualisation?
+
+```shell
+#jupyter notebook
+```
+
+Then run on your  brower.
