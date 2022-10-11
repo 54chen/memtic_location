@@ -13,7 +13,7 @@ WAREHOUSE_LEVEL_DISTANCE = [0,0.1,0.2,0.3,0.4,0.5] # cover distance is normalise
 WAREHOUSE_LEVEL_COST = [0,0.1,0.2,0.3,0.4,0.5] # cost of warehouse is normalised already
 DISTANCE_DATA = pd.read_csv("distance_data.csv",index_col=0)
 FINAL_DATA = pd.read_csv("final_data.csv",index_col=0)
-CONVERGED_CNT=1
+CONVERGED_CNT=10
 
 SELECT = 1
 RECOMBINE = 2
