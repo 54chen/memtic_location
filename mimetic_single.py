@@ -1,19 +1,19 @@
 from operator import ne
+from pdb import find_function
 from threading import local
 import pandas as pd
 from numpy import random
 import numpy as np
 import random as rd
-import geemap, ee 
 
-POP_SIZE = 100
+POP_SIZE = 4
 CITY_SIZE = 73
 WAREHOUSE_LEVEL = [0, 1, 2, 3, 4, 5]
-WAREHOUSE_LEVEL_DISTANCE = [0,0.1,0.2,0.3,0.4,0.5] # cover distance is normalised already
+WAREHOUSE_LEVEL_DISTANCE = [0,0.01,0.02,0.03,0.04,0.05] # cover distance is normalised already
 WAREHOUSE_LEVEL_COST = [0,0.1,0.2,0.3,0.4,0.5] # cost of warehouse is normalised already
-DISTANCE_DATA = pd.read_csv("distance_data.csv",index_col=0)
-FINAL_DATA = pd.read_csv("final_data.csv",index_col=0)
-CONVERGED_CNT=10
+DISTANCE_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/distance_data.csv",index_col=0)
+FINAL_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/final_data.csv",index_col=0)
+CONVERGED_CNT=2
 
 SELECT = 1
 RECOMBINE = 2
@@ -72,38 +72,43 @@ def generate_neighbourhoods(solution):
 
 def local_search(solution):
     solutions = generate_neighbourhoods(solution)
-    best_solution = solution
-    cover_population, cost_total = fitness(solution)
-    best_cost = cost_total
-    best_cover = cover_population
-    same_count = 0
-    for i in range(0, len(solutions)):
-        p,c = fitness(solutions[i])
-        # front decision
-        if (c <= best_cost and p >= best_cover):
-            best_cost = c
-            best_cover = p
-            best_solution = solutions[i]
-            same_count = 0
-        else:
-            same_count = same_count+1
-        if same_count >= CONVERGED_CNT:
-            break
-        print("best cover and cost for neighbour", best_cover, best_cost)
-
+    # best_solution = solution
+    # cover_population, cost_total = fitness(solution)
+    # best_cost = cost_total
+    # best_cover = cover_population
+    # same_count = 0
+    best_solution = multi_objective_tournament_select(solutions, int(len(solutions)/100))
+    # for i in range(0, len(solutions)):
+    #     p,c = fitness(solutions[i])
+    #     # front decision
+    #     if (c <= best_cost and p >= best_cover):
+    #         best_cost = c
+    #         best_cover = p
+    #         best_solution = solutions[i]
+    #         same_count = 0
+    #     else:
+    #         same_count = same_count+1
+    #     if same_count >= CONVERGED_CNT:
+    #         break
+    # print("best cover and cost for local_search", best_cover, best_cost)
     return best_solution
 
 
-def generate_random_configuration():
-    return random.randint(5, size=(CITY_SIZE))
+def generate_random_configuration(max):
+    return random.randint(max, size=(CITY_SIZE))
 
 
 def generate_initial_population():
     pop = []
-    for j in range(1, POP_SIZE):
-        i = generate_random_configuration()
+    for j in range(0, int(POP_SIZE/2)):
+        i = generate_random_configuration(5)
         i = local_search(i)
         pop.append(i)
+
+    for j in range(int(POP_SIZE/2), POP_SIZE):
+        i = generate_random_configuration(2)
+        pop.append(i)
+          
     return pop
 
 def is_converged(pop):
@@ -119,7 +124,7 @@ def is_converged(pop):
         total = total + len(comp)
     same_rate = same/total
     if same_rate >= CONVERGED_RATE:
-        print('Converged checked!', same_rate)
+        print('Converged checked! rate:%f , pop:%s' %(same_rate,pop))
         return True
     else:
         return False
@@ -127,18 +132,30 @@ def is_converged(pop):
 def extract_from_buffer(buffer):
     return buffer
 
+def multi_objective_tournament_select(pop, tournament_size):
+    best = pop[random.randint(0,len(pop)-1)]
+
+    for i in range(2, tournament_size):
+        next = pop[random.randint(0,len(pop)-1)]
+        p0,c0 = fitness(best)
+        p1,c1 = fitness(next)
+        if p1 > p0:
+            best = next
+            # print('population:%s, cost:%s' % (p1,c1))
+        if p1 == p0 and c1 <= c0:
+            best = next
+            # print('population:%s, cost:%s' % (p1,c1))
+        
+    return best
+
+
 def apply_operator(op, buffer):
     if op == SELECT:
-        temp = []
-        while len(temp) < POP_SIZE:  
-            r = rd.sample(buffer, TOURNAMENT_SELECTION_K)
-            p0,c0 = fitness(r[0])
-            p1,c1 = fitness(r[1])
-            if c0 <= c1 and p0 >= p1:
-                temp.append(r[0])
-            else:
-                temp.append(r[1])
-        return temp
+
+        for i in range(0,len(buffer)):
+            buffer[i] = multi_objective_tournament_select(buffer, int(len(buffer)/100))
+          
+        return buffer
 
     if op == RECOMBINE: #transmission crossover
         for i in range(len(buffer)):
@@ -146,7 +163,7 @@ def apply_operator(op, buffer):
             point_2 = random.randint(0,CITY_SIZE-1)
             if point_1 > point_2:
                 point_1, point_2 = point_2, point_1
-            r = rd.sample(buffer, 3)
+            r = rd.sample(list(buffer), 3)
             parent1 = r[0]
             parent2 = r[1]
             parent3 = r[2]
@@ -171,7 +188,8 @@ def apply_operator(op, buffer):
         return buffer
 
 
-def generate_new_population(pop):
+def generate_new_population(p):
+    pop = np.copy(p)
     buffer = {}
     buffer[0] = pop
     n_op = 4
@@ -201,7 +219,7 @@ def restart_population(pop): # Random immigrant
     for i in range(preserved):
         new_pop.append(pop[i])
     for j in range(preserved+1, len(pop)):
-        i = generate_random_configuration()
+        i = generate_random_configuration(2)
         i = local_search(i)
         new_pop.append(i)
     return new_pop 
@@ -210,11 +228,14 @@ def restart_population(pop): # Random immigrant
 def mimetic(repetition):
     pop = generate_initial_population()
     print('>>>inital pop size:', len(pop))
+    print('>>>inital pop:', pop)
     for i in range(repetition):
         print('================iteration:', i)
         new_pop = generate_new_population(pop)
-        print("new_pop size:", len(new_pop))
+        print("generate new_pop:", new_pop.shape)
         pop = update_population(pop, new_pop)
+        print("update pop X new_pop:", np.array(pop).shape)
+
         if is_converged(pop):
             pop = restart_population(pop)
 
@@ -232,20 +253,11 @@ def generate_visual_csv(solution):
     df = pd.DataFrame(visualisation, columns=['latitude','longitude','radius'])
     df.to_csv("visualisation1.csv")
 
-
 if __name__ == '__main__':
     repetition = 2
     pop = mimetic(repetition)
     best_cost = 99999999
     best_cover = 0
-    best_solution = []
-    for x in pop:
-        p,c = fitness(x)
-          # front decision
-        if (c <= best_cost and p >= best_cover):
-            best_cost = c
-            best_cover = p
-            best_solution = x
-        print('fitness:', p, c)
+    best_solution = multi_objective_tournament_select(pop, len(pop))
 
     generate_visual_csv(best_solution)
