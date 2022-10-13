@@ -1,3 +1,5 @@
+from operator import add
+from re import S
 import pandas as pd
 from numpy import random
 import numpy as np
@@ -5,7 +7,8 @@ import random as rd
 import time
 
 #config
-POP_SIZE = 100
+ITERATION = 5
+POP_SIZE = 4
 MUTATE_TIMES = 5
 PRESERVE_RATE = 0.8
 CONVERGED_RATE = 0.6
@@ -26,12 +29,19 @@ MUTATE = 3
 LS = 4
 OP = [0,SELECT, RECOMBINE, MUTATE, LS] # Pipeline op
 
+# pareto front [population] = cost
 
-
-# print(FINAL_DATA.iloc[10])
-# print(FINAL_DATA.loc[FINAL_DATA["name"] == 'Beijing Shi'])
-# print(DISTANCE_DATA.loc[DISTANCE_DATA['city1'] == 'Beijing Shi'])
-# print(DISTANCE_DATA.loc[(DISTANCE_DATA['city1'] == 'Beijing Shi') & (DISTANCE_DATA['distance'] <= 0.5)])
+def add_pareto_front(pareto_front, pareto_front_solution, population, cost, solution):
+    if population not in pareto_front:
+        pareto_front[population] = cost
+        pareto_front_solution[population] = solution
+        return True
+    else:
+        if pareto_front[population] > cost:
+            pareto_front[population] = cost
+            pareto_front_solution[population] = solution
+            return True
+    return False
 
 def fitness(solution):
     cover_population = 0
@@ -72,26 +82,24 @@ def generate_neighbourhoods(solution):
 
 def local_search(solution):
     solutions = generate_neighbourhoods(solution)
-    # best_solution = solution
-    # cover_population, cost_total = fitness(solution)
-    # best_cost = cost_total
-    # best_cover = cover_population
-    # same_count = 0
-    best_solution = multi_objective_tournament_select(solutions)
-    # for i in range(0, len(solutions)):
-    #     p,c = fitness(solutions[i])
-    #     # front decision
-    #     if (c <= best_cost and p >= best_cover):
-    #         best_cost = c
-    #         best_cover = p
-    #         best_solution = solutions[i]
-    #         same_count = 0
-    #     else:
-    #         same_count = same_count+1
-    #     if same_count >= CONVERGED_CNT:
-    #         break
-    # print("best cover and cost for local_search", best_cover, best_cost)
-    return best_solution
+    cover_population, cost_total = fitness(solution)
+    same_count = 0
+    best_pareto_front = {}
+    best_pareto_front_solution = {}
+    add_pareto_front(best_pareto_front,best_pareto_front_solution, cover_population, cost_total, solution)
+
+    for i in range(0, len(solutions)):
+        p,c = fitness(solutions[i])
+        # compare in front map
+        if (add_pareto_front(best_pareto_front,best_pareto_front_solution, cover_population, cost_total, solution)):
+            same_count = 0
+        else:
+            same_count = same_count+1
+        if same_count >= CONVERGED_CNT:
+            break
+    print("pareto front for local_search, x->key:", cover_population)
+    s = rd.sample(list(best_pareto_front_solution.values()),1)[0] # random choose from the pareto front line
+    return s
 
 
 def generate_random_configuration(max):
@@ -102,10 +110,10 @@ def generate_initial_population():
     pop = []
     for j in range(0, int(POP_SIZE/2)):
         i = generate_random_configuration(5)
-        i = local_search(i)
+        i = local_search(i) # random choose from the pareto front line
         pop.append(i)
 
-    for j in range(int(POP_SIZE/2), POP_SIZE):
+    for j in range(int(POP_SIZE/2), POP_SIZE): # add diversity by random in half of solutions
         i = generate_random_configuration(2)
         pop.append(i)
           
@@ -152,11 +160,10 @@ def multi_objective_tournament_select(pop, tournament_size = TOURNAMENT_SIZE):
 
 def apply_operator(op, buffer):
     if op == SELECT:
-
+        temp = {}
         for i in range(0,len(buffer)):
-            buffer[i] = multi_objective_tournament_select(buffer)
-          
-        return buffer
+            temp[i] = multi_objective_tournament_select(buffer)
+        return list(temp.values())
 
     if op == RECOMBINE: #transmission crossover
         for i in range(len(buffer)):
@@ -212,16 +219,22 @@ def update_population(pop, new_pop): # Plus strategy
     next_pop.extend(pop)
     next_pop.extend(new_pop) 
     temp = []
+    
+    best_pareto_front = {}
+    best_pareto_front_solution = {}
+
     for i in range(0, len(next_pop)):
-        temp.append(multi_objective_tournament_select(next_pop))
-    return temp[:POP_SIZE]
+        solution = next_pop[i]
+        cover_population, cost_total = fitness(solution)
+        add_pareto_front(best_pareto_front,best_pareto_front_solution, cover_population, cost_total, solution)
+    return list(best_pareto_front_solution.values())
 
 def restart_population(pop): # Random immigrant
     new_pop = []
     preserved = int(len(pop) * PRESERVE_RATE)
     for i in range(preserved):
         new_pop.append(pop[i])
-    for j in range(preserved+1, len(pop)):
+    for j in range(preserved, len(pop)):
         i = generate_random_configuration(2)
         i = local_search(i)
         new_pop.append(i)
@@ -232,10 +245,11 @@ def mimetic(repetition):
     pop = generate_initial_population()
     print('>>>inital pop size:', len(pop))
     print('>>>inital pop:', pop)
+  
     for i in range(repetition):
         print('================iteration:', i)
         new_pop = generate_new_population(pop)
-        print("new_pop has generated new_pop:", new_pop.shape)
+        print("new_pop has generated new_pop:", np.array(new_pop).shape)
         pop = update_population(pop, new_pop)
         print("update pop X new_pop:", np.array(pop).shape)
 
@@ -258,12 +272,9 @@ def generate_visual_csv(solution):
 
 if __name__ == '__main__':
     start_time = time.time()
-
-    repetition = 20
-    pop = mimetic(repetition)
-    best_cost = 99999999
-    best_cover = 0
-    best_solution = multi_objective_tournament_select(pop)
-
-    generate_visual_csv(best_solution)
+    pop = mimetic(ITERATION)
     print('mimetic run successfully, time cost:%f'%(time.time() - start_time))
+    
+    best_solution = rd.sample(list(pop),1)[0] # random choose one from pareto front
+    print("csv verion evaluation:p->%f,c->%f"%(fitness(best_solution)))
+    generate_visual_csv(best_solution)
