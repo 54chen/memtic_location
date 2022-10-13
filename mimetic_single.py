@@ -1,19 +1,24 @@
-from operator import ne
-from pdb import find_function
-from threading import local
 import pandas as pd
 from numpy import random
 import numpy as np
 import random as rd
+import time
 
-POP_SIZE = 4
+#config
+POP_SIZE = 100
+MUTATE_TIMES = 5
+PRESERVE_RATE = 0.8
+CONVERGED_RATE = 0.6
+TOURNAMENT_SIZE = 2
+CONVERGED_CNT=10
+
+#constant
 CITY_SIZE = 73
 WAREHOUSE_LEVEL = [0, 1, 2, 3, 4, 5]
 WAREHOUSE_LEVEL_DISTANCE = [0,0.01,0.02,0.03,0.04,0.05] # cover distance is normalised already
 WAREHOUSE_LEVEL_COST = [0,0.1,0.2,0.3,0.4,0.5] # cost of warehouse is normalised already
 DISTANCE_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/distance_data.csv",index_col=0)
 FINAL_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/final_data.csv",index_col=0)
-CONVERGED_CNT=2
 
 SELECT = 1
 RECOMBINE = 2
@@ -21,12 +26,7 @@ MUTATE = 3
 LS = 4
 OP = [0,SELECT, RECOMBINE, MUTATE, LS] # Pipeline op
 
-TOURNAMENT_SELECTION_K = 2
 
-MUTATE_TIMES = 5
-
-PRESERVE_RATE = 0.5
-CONVERGED_RATE = 0.5
 
 # print(FINAL_DATA.iloc[10])
 # print(FINAL_DATA.loc[FINAL_DATA["name"] == 'Beijing Shi'])
@@ -77,7 +77,7 @@ def local_search(solution):
     # best_cost = cost_total
     # best_cover = cover_population
     # same_count = 0
-    best_solution = multi_objective_tournament_select(solutions, int(len(solutions)/100))
+    best_solution = multi_objective_tournament_select(solutions)
     # for i in range(0, len(solutions)):
     #     p,c = fitness(solutions[i])
     #     # front decision
@@ -95,7 +95,7 @@ def local_search(solution):
 
 
 def generate_random_configuration(max):
-    return random.randint(max, size=(CITY_SIZE))
+    return random.randint(max+1, size=(CITY_SIZE))
 
 
 def generate_initial_population():
@@ -132,19 +132,20 @@ def is_converged(pop):
 def extract_from_buffer(buffer):
     return buffer
 
-def multi_objective_tournament_select(pop, tournament_size):
+def multi_objective_tournament_select(pop, tournament_size = TOURNAMENT_SIZE):
     best = pop[random.randint(0,len(pop)-1)]
-
-    for i in range(2, tournament_size):
+    b_p,b_c = fitness(best)
+    for i in range(tournament_size):
         next = pop[random.randint(0,len(pop)-1)]
-        p0,c0 = fitness(best)
         p1,c1 = fitness(next)
-        if p1 > p0:
+        if p1 > b_p:
             best = next
-            # print('population:%s, cost:%s' % (p1,c1))
-        if p1 == p0 and c1 <= c0:
+            b_p = p1
+            print('population:%s, cost:%s' % (p1,c1))
+        if p1 == b_p and c1 <= b_c:
             best = next
-            # print('population:%s, cost:%s' % (p1,c1))
+            b_c = c1
+            print('population:%s, cost:%s' % (p1,c1))
         
     return best
 
@@ -153,7 +154,7 @@ def apply_operator(op, buffer):
     if op == SELECT:
 
         for i in range(0,len(buffer)):
-            buffer[i] = multi_objective_tournament_select(buffer, int(len(buffer)/100))
+            buffer[i] = multi_objective_tournament_select(buffer)
           
         return buffer
 
@@ -210,8 +211,10 @@ def update_population(pop, new_pop): # Plus strategy
     next_pop = []
     next_pop.extend(pop)
     next_pop.extend(new_pop) 
-    next_pop.sort(key = lambda v: fitness(v))
-    return next_pop[:POP_SIZE]
+    temp = []
+    for i in range(0, len(next_pop)):
+        temp.append(multi_objective_tournament_select(next_pop))
+    return temp[:POP_SIZE]
 
 def restart_population(pop): # Random immigrant
     new_pop = []
@@ -232,7 +235,7 @@ def mimetic(repetition):
     for i in range(repetition):
         print('================iteration:', i)
         new_pop = generate_new_population(pop)
-        print("generate new_pop:", new_pop.shape)
+        print("new_pop has generated new_pop:", new_pop.shape)
         pop = update_population(pop, new_pop)
         print("update pop X new_pop:", np.array(pop).shape)
 
@@ -254,10 +257,13 @@ def generate_visual_csv(solution):
     df.to_csv("visualisation1.csv")
 
 if __name__ == '__main__':
-    repetition = 2
+    start_time = time.time()
+
+    repetition = 20
     pop = mimetic(repetition)
     best_cost = 99999999
     best_cover = 0
-    best_solution = multi_objective_tournament_select(pop, len(pop))
+    best_solution = multi_objective_tournament_select(pop)
 
     generate_visual_csv(best_solution)
+    print('mimetic run successfully, time cost:%f'%(time.time() - start_time))
