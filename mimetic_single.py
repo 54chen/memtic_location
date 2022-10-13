@@ -15,7 +15,7 @@ CONVERGED_CNT=10
 #constant
 CITY_SIZE = 73
 WAREHOUSE_LEVEL = [0, 1, 2, 3, 4, 5]
-WAREHOUSE_LEVEL_DISTANCE = [0,0.01,0.02,0.03,0.04,0.05] # cover distance is normalised already
+WAREHOUSE_LEVEL_DISTANCE = [0,0.1,0.2,0.3,0.4,0.5] # cover distance is normalised already
 WAREHOUSE_LEVEL_COST = [0,0.1,0.2,0.3,0.4,0.5] # cost of warehouse is normalised already
 DISTANCE_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/distance_data.csv",index_col=0)
 FINAL_DATA = pd.read_csv("/Users/chenzhen/Documents/workspace/homework1-556/project/jupyter/mimetic_parallel/final_data.csv",index_col=0)
