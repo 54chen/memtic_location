@@ -1,4 +1,3 @@
-
 import multiprocessing
 import random as rd
 import time
@@ -292,15 +291,21 @@ def generate_visual_csv(solution):
 
 if __name__ == '__main__':
     start_time = time.time()
+
+    same_count = 0
     best_pareto_front = {}
     best_pareto_front_solution = {}
-    pop = mimetic(ITERATION)
-    print('mimetic run successfully, time cost:%f' %
+    temp = []
+    with multiprocessing.get_context('spawn').Pool(processes=12) as pool:
+        for result in pool.map(mimetic, [ITERATION]*12):
+            temp.extend(result)
+
+    print('Parallel mimetic run successfully, time cost:%f' %
           (time.time() - start_time))
 
     # store result by csv and picture of pareto front
     with multiprocessing.get_context('spawn').Pool(processes=12) as pool:
-        for result in pool.map(fitness, pop):
+        for result in pool.map(fitness, temp):
             cover_population, cost_total, solution = result
             add_pareto_front(best_pareto_front, best_pareto_front_solution,
                              cover_population, cost_total, solution)
@@ -308,7 +313,7 @@ if __name__ == '__main__':
     best_solution = rd.sample(list(best_pareto_front_solution.values()), 1)[
         0]  # random choose one from pareto front
     print("iteration:%d, initial popsize:%d, pareto front size:%d " %
-          (ITERATION, POP_SIZE, len(pop)))
+          (ITERATION, POP_SIZE, len(temp)))
     p, c, _ = fitness(best_solution)
     print("csv verion evaluation:p->%f,c->%f" % (p, c))
     generate_visual_csv(best_solution)

@@ -1,4 +1,3 @@
-
 import multiprocessing
 import random as rd
 import time
@@ -118,10 +117,13 @@ def generate_random_configuration(max):
 
 def generate_initial_population():
     pop = []
-    for j in range(0, int(POP_SIZE/2)):
+    item = []
+    for _ in range(0, int(POP_SIZE/2)):
         i = generate_random_configuration(5)
-        i = local_search(i)  # random choose from the pareto front line
-        pop.append(i)
+        item.append(i)
+    with multiprocessing.get_context('spawn').Pool(processes=12) as pool:
+        for result in pool.map(local_search, item):
+            pop.append(result)
 
     # add diversity by random in half of solutions
     for j in range(int(POP_SIZE/2), POP_SIZE):
@@ -204,9 +206,11 @@ def apply_operator(op, buffer):
         return buffer
 
     if op == LS:
-        for i in range(len(buffer)):
-            buffer[i] = local_search(buffer[i])
-        return buffer
+        temp = []
+        with multiprocessing.get_context('spawn').Pool(processes=12) as pool:
+            for result in pool.map(local_search, buffer):
+                temp.append(result)
+        return temp
 
 
 def generate_new_population(p):
@@ -241,7 +245,6 @@ def update_population(pop, new_pop):  # Plus strategy
         cover_population, cost_total, _ = fitness(solution)
         add_pareto_front(best_pareto_front, best_pareto_front_solution,
                          cover_population, cost_total, solution)
-    print('update_population stop')
 
     return list(best_pareto_front_solution.values())
 
@@ -292,6 +295,8 @@ def generate_visual_csv(solution):
 
 if __name__ == '__main__':
     start_time = time.time()
+
+    same_count = 0
     best_pareto_front = {}
     best_pareto_front_solution = {}
     pop = mimetic(ITERATION)
