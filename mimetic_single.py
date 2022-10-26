@@ -33,7 +33,7 @@ MUTATE = 3
 LS = 4
 OP = [0, SELECT, RECOMBINE, MUTATE, LS]  # Pipeline op
 
-# pareto front [population] = cost
+# Pareto front [population] = cost
 
 
 def add_pareto_front(pareto_front, pareto_front_solution, population, cost, solution):
@@ -47,6 +47,42 @@ def add_pareto_front(pareto_front, pareto_front_solution, population, cost, solu
             pareto_front_solution[population] = solution
             return True
     return False
+
+# Remove the repeated data (i.e. same cost)
+
+
+def tidy_pareto_front(pareto_front, pareto_front_solution):
+    best_pareto_front = {}
+    best_pareto_front_solution = {}
+    t_pareto_front = {}
+    t_pareto_front_solution = {}
+    for population in pareto_front:
+        cost = pareto_front[population]
+        if cost not in t_pareto_front:
+            t_pareto_front[cost] = population
+            t_pareto_front_solution[cost] = pareto_front_solution[population]
+        else:
+            if population > t_pareto_front[cost]:
+                t_pareto_front[cost] = population
+                t_pareto_front_solution[cost] = pareto_front_solution[population]
+    for cost in t_pareto_front:
+        population = t_pareto_front[cost]
+        best_pareto_front[population] = cost
+        best_pareto_front_solution[population] = pareto_front_solution[population]
+
+    return best_pareto_front, best_pareto_front_solution
+
+# Average cost when population coverage reaches over 90 percentage of total population (11)
+
+
+def cal_avg_cost(pareto_front):
+    costs = []
+    for population in pareto_front:
+        if population > 11:
+            costs.append(pareto_front[population])
+    return np.array(costs).mean()
+
+# Output total cost
 
 
 def fitness(solution):
@@ -72,6 +108,8 @@ def fitness(solution):
         to_cities)]['population'].sum()
     # cost_total = warehouse cost + (1-increase(traget)) * distance*population(target).
     return cover_population, cost_total, solution
+
+# Neighbourhoods for local search
 
 
 def generate_neighbourhoods(solution):
@@ -106,7 +144,7 @@ def local_search(solution):
             same_count = same_count+1
         if same_count >= CONVERGED_CNT:
             break
-    print("pareto front for local_search, x->key:", cover_population)
+    print("pareto front for local_search, cover population:", cover_population)
     s = rd.sample(list(best_pareto_front_solution.values()), 1)[
         0]  # random choose from the pareto front line
     return s
@@ -128,6 +166,8 @@ def generate_initial_population():
         i = generate_random_configuration(2)
         pop.append(i)
     return pop
+
+# If the population includes too many same results, return true.
 
 
 def is_converged(pop):
@@ -152,6 +192,8 @@ def is_converged(pop):
 def extract_from_buffer(buffer):
     return buffer
 
+# Choose a best solution from a population -> method: tournament select
+
 
 def multi_objective_tournament_select(pop, tournament_size=TOURNAMENT_SIZE):
     best = pop[random.randint(0, len(pop)-1)]
@@ -168,6 +210,8 @@ def multi_objective_tournament_select(pop, tournament_size=TOURNAMENT_SIZE):
             b_c = c1
             print('population:%s, cost:%s' % (p1, c1))
     return best
+
+# Core operation of Mimetic
 
 
 def apply_operator(op, buffer):
@@ -257,6 +301,8 @@ def restart_population(pop):  # Random immigrant
         new_pop.append(i)
     return new_pop
 
+# Entry point of Mimetic
+
 
 def mimetic(repetition):
     pop = generate_initial_population()
@@ -294,16 +340,21 @@ if __name__ == '__main__':
     start_time = time.time()
     best_pareto_front = {}
     best_pareto_front_solution = {}
+    # Main Mimetic
     pop = mimetic(ITERATION)
+
     print('mimetic run successfully, time cost:%f' %
           (time.time() - start_time))
 
-    # store result by csv and picture of pareto front
+    # Multi-threaded store Pareto fronts to generate csv and png.
     with multiprocessing.get_context('spawn').Pool(processes=12) as pool:
         for result in pool.map(fitness, pop):
             cover_population, cost_total, solution = result
             add_pareto_front(best_pareto_front, best_pareto_front_solution,
                              cover_population, cost_total, solution)
+    print("Avg. cost of P90:%f" % cal_avg_cost(best_pareto_front))
+    best_pareto_front, best_pareto_front_solution = tidy_pareto_front(
+        best_pareto_front, best_pareto_front_solution)
 
     best_solution = rd.sample(list(best_pareto_front_solution.values()), 1)[
         0]  # random choose one from pareto front

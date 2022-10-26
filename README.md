@@ -1,4 +1,4 @@
-# memtic_location
+# mimetic_location
 
 ## prepare_data
 
@@ -8,7 +8,7 @@ Get global satelates night lights data from VIIRS (google earth api);
 Get world administrative areas data from Global Administrative Unit Layers (GAUL);
 Get top 100 largest cities by population from https://www.macrotrends.net/cities/largest-cities-by-population;
 
-## process csv file to Memitic
+## process csv file to Mimetic
 
 - process.py 
 
@@ -17,12 +17,19 @@ Merge them to generate:
 1. final_data.csv  -> cities with their own lights, population, etc..
 2. distance_data.csv  -> distance data for each others.
 
-## Memitic
+## Mimetic
 
-- memtic_single.py
+- mimetic_single.py
 
-non-parallel version Memtic.
+Single-threaded version Mimetic
 
+- mimetic_async.py
+
+Separated version Mimetic
+
+- mimetic_async_separate.py
+
+Parallel evaluation version Mimetic
 
 ## Visualisation
 - only support jupyter notebook
@@ -35,4 +42,4 @@ non-parallel version Memtic.
 
 Then run on your  brower.
 
- ![alt text](https://raw.githubusercontent.com/54chen/memtic_location/main/result1.png)
+ ![alt text](https://raw.githubusercontent.com/54chen/mimetic_location/main/result1.png)
